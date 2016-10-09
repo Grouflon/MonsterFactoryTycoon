@@ -24,6 +24,13 @@ public class UIWindow : MonoBehaviour
         if (_content == null)
             return;
 
+        // CLEAR PREVIOUS CONTENT
+        foreach (Transform child in contentTransform)
+        {
+            GameObject.Destroy(child.gameObject);
+        }
+
+        // APPLY NEW CONTENT
         _content.SetParent(contentTransform);
     }
 

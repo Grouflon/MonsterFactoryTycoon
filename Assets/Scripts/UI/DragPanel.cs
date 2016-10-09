@@ -29,7 +29,7 @@ public class DragPanel : MonoBehaviour, IPointerDownHandler, IDragHandler
 
         Vector2 pointerPosition = ClampToWindow(_data);
         Vector2 localPointerPosition;
-        if (RectTransformUtility.ScreenPointToLocalPointInRectangle(m_canvasRectTransform, _data.position, _data.pressEventCamera, out localPointerPosition))
+        if (RectTransformUtility.ScreenPointToLocalPointInRectangle(m_canvasRectTransform, pointerPosition, _data.pressEventCamera, out localPointerPosition))
         {
             panelRectTransform.localPosition = localPointerPosition - m_pointerOffset;
         }

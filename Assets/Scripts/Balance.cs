@@ -10,6 +10,8 @@ public class Balance : MonoBehaviour
     public int startingMoney = 10000;
     public int staffHiringCost = 100;
     public int staffSalary = 100;
+    public int denCost = 1000;
+    public int portalCost = 1000;
 
     public static Balance Instance()
     {
