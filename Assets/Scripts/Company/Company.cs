@@ -41,6 +41,8 @@ public class Company : MonoBehaviour
         m_staff.Add(staff);
 
         OnStaffHired(staff);
+
+        Logger.Log("Hired new staff \"" + staff.GetName() + "\" for " + m_balance.staffHiringCost + "$");
     }
 
     public void FireStaff(Staff _staff)
@@ -49,6 +51,8 @@ public class Company : MonoBehaviour
         m_staff.Remove(_staff);
 
         OnStaffFired(_staff);
+
+        Logger.Log("Fired staff \"" + _staff.GetName() + "\"");
     }
 
     public IList<Staff> GetStaff()

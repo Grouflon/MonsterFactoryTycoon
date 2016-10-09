@@ -21,8 +21,9 @@ public class Staff : CompanyObject
 
     public override void OnNewCycle()
     {
-        // TODO: Add Log
         m_company.AddMoney(-m_balance.staffSalary);
+
+        Logger.Log("Payed " + m_balance.staffSalary + "$ as staff salary");
     }
 
     private string m_name;
