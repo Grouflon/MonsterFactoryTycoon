@@ -14,6 +14,10 @@ public class Company : MonoBehaviour
     public delegate void RoomAction(Room _room);
     public event RoomAction OnRoomBuilt;
 
+    public delegate void RoomAssignmentAction(Room _room, Staff _staff);
+    public event RoomAssignmentAction OnStaffAssigned;
+    public event RoomAssignmentAction OnStaffUnassigned;
+
     public void AddMoney(int _value)
     {
         m_money += _value;
@@ -28,7 +32,8 @@ public class Company : MonoBehaviour
         m_objects.Add(staff);
         m_staff.Add(staff);
 
-        OnStaffHired(staff);
+        if (OnStaffHired != null)
+            OnStaffHired(staff);
 
         Logger.Log("Hired new staff \"" + staff.GetName() + "\" for " + m_balance.staffHiringCost + "$");
     }
@@ -38,9 +43,44 @@ public class Company : MonoBehaviour
         m_objects.Remove(_staff);
         m_staff.Remove(_staff);
 
-        OnStaffFired(_staff);
+        if (_staff.GetAssignment() != null)
+        {
+            UnassignStaff(_staff, _staff.GetAssignment());
+        }
+
+        if (OnStaffFired != null)
+            OnStaffFired(_staff);
 
         Logger.Log("Fired staff \"" + _staff.GetName() + "\"");
+    }
+
+    public void AssignStaff(Staff _staff, Room _room)
+    {
+        if (_staff.GetAssignment() != null)
+        {
+            UnassignStaff(_staff, _staff.GetAssignment());
+        }
+
+        if (!_room.AssignStaff(_staff))
+            return;
+
+        _staff.SetAssignment(_room);
+
+        if (OnStaffAssigned != null)
+            OnStaffAssigned(_room, _staff);
+
+        Logger.Log("\"" + _staff.GetName() + "\" Assigned to Room \"" + _room.GetName() + "\".");
+    }
+
+    public void UnassignStaff(Staff _staff, Room _room)
+    {
+        _room.UnassignStaff(_staff);
+        _staff.SetAssignment(null);
+
+        if (OnStaffUnassigned != null)
+            OnStaffUnassigned(_room, _staff);
+
+        Logger.Log("\"" + _staff.GetName() + "\" Unassigned from Room \"" + _room.GetName() + "\".");
     }
 
     public void BuildRoom(RoomType _type, int _position)
@@ -76,7 +116,8 @@ public class Company : MonoBehaviour
         AddMoney(-roomCost);
         m_rooms[_position] = room;
 
-        OnRoomBuilt(room);
+        if (OnRoomBuilt != null)
+            OnRoomBuilt(room);
 
         Logger.Log("Built \"" + room.GetName() + "\" for " + roomCost + "$");
     }

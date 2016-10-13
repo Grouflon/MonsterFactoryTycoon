@@ -20,6 +20,8 @@ public class UIManager : MonoBehaviour
 
     [Header("Rooms")]
     public ScrollRect roomListScrollRect;
+    public RectTransform roomWindowContentPrefab;
+
 
     public UIManager()
     {
@@ -128,6 +130,25 @@ public class UIManager : MonoBehaviour
         Button button = m_roomButtons[_room.GetPosition()];
         button.GetComponentInChildren<Text>().text = _room.GetName();
         button.onClick.RemoveAllListeners();
+
+        button.onClick.AddListener(() =>
+        {
+            UIWindow window = null;
+            if (UIWindowManager.Instance().CreateWindow(_room.GetName(), out window))
+            {
+                _room.FillWindowContent(window);
+            }
+        });
+    }
+
+    public static UIManager Instance()
+    {
+        UIManager instance = FindObjectOfType<UIManager>();
+        if (instance == null)
+        {
+            Debug.LogError("You need to have one instance of UIManager in the scene.");
+        }
+        return instance;
     }
 
     private Dictionary<Guid,Button> m_staffButtons;

@@ -13,6 +13,10 @@ public class Balance : MonoBehaviour
     public int denCost = 1000;
     public int portalCost = 1000;
 
+    [Header("Rooms")]
+    public int maxDenStaff = 3;
+    public int maxPortalStaff = 3;
+
     public static Balance Instance()
     {
         Balance instance = FindObjectOfType<Balance>();
