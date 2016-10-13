@@ -1,5 +1,4 @@
 ﻿using UnityEngine;
-using System;
 using System.Collections;
 using System.Collections.Generic;
 
@@ -17,6 +16,9 @@ public class Company : MonoBehaviour
     public delegate void RoomAssignmentAction(Room _room, Staff _staff);
     public event RoomAssignmentAction OnStaffAssigned;
     public event RoomAssignmentAction OnStaffUnassigned;
+
+    public delegate void MonsterAction(Monster _monster);
+    public event MonsterAction OnMonsterHired;
 
     public void AddMoney(int _value)
     {
@@ -115,11 +117,26 @@ public class Company : MonoBehaviour
 
         AddMoney(-roomCost);
         m_rooms[_position] = room;
+        m_objects.Add(room);
 
         if (OnRoomBuilt != null)
             OnRoomBuilt(room);
 
         Logger.Log("Built \"" + room.GetName() + "\" for " + roomCost + "$");
+    }
+
+    public void HireMonster()
+    {
+        Monster monster = new Monster();
+        monster.SetStrength(Random.Range(m_balance.minStrength, m_balance.maxStrength));
+
+        m_objects.Add(monster);
+        m_monsters.Add(monster);
+
+        if (OnMonsterHired != null)
+            OnMonsterHired(monster);
+
+        Logger.Log("Hired new monster \"" + monster.GetName() + "\".");
     }
 
     public IList<Staff> GetStaff()
@@ -139,7 +156,7 @@ public class Company : MonoBehaviour
 
     public float GetCurrentTime()
     {
-        return (float)m_cycleCount + (m_timer / m_balance.cycleDuration);
+        return m_time;
     }
 
 
@@ -157,7 +174,9 @@ public class Company : MonoBehaviour
     public Company()
     {
         m_objects = new List<CompanyObject>();
+        m_objectsWorkingList = new List<CompanyObject>();
         m_staff = new List<Staff>();
+        m_monsters = new List<Monster>();
 
         m_rooms = new Room[12];
     }
@@ -172,18 +191,22 @@ public class Company : MonoBehaviour
 	void Update()
 	{
         float deltaTime = Time.deltaTime * timeRatio;
+        float cycleDeltaTime = deltaTime / m_balance.cycleDuration;
 
-        foreach (CompanyObject obj in m_objects)
+        m_time += cycleDeltaTime;
+        m_timer += cycleDeltaTime;
+
+        m_objectsWorkingList.Clear();
+        m_objectsWorkingList.AddRange(m_objects);
+        foreach (CompanyObject obj in m_objectsWorkingList)
         {
-            obj.Update(deltaTime);
+            obj.Update(cycleDeltaTime);
         }
 
-        m_timer += deltaTime;
-        while (m_timer > m_balance.cycleDuration)
+        while (m_timer > 1.0f)
         {
-            m_timer -= m_balance.cycleDuration;
-            ++m_cycleCount;
-            foreach (CompanyObject obj in m_objects)
+            m_timer -= 1.0f;
+            foreach (CompanyObject obj in m_objectsWorkingList)
             {
                 obj.OnNewCycle();
             }
@@ -195,9 +218,12 @@ public class Company : MonoBehaviour
     Balance m_balance;
 
     List<CompanyObject> m_objects;
+    List<CompanyObject> m_objectsWorkingList;
     List<Staff> m_staff;
+    List<Monster> m_monsters;
     Room[] m_rooms;
 
     float m_timer = 0.0f;
+    float m_time = 0.0f;
     int m_cycleCount = 0;
 }

@@ -111,8 +111,6 @@ public class Room : CompanyObject
         GenerateStaffButtons(m_windowContent);
     }
 
-    
-
     public int GetPosition()
     {
         return m_position;
@@ -123,9 +121,20 @@ public class Room : CompanyObject
         return m_type;
     }
 
-    public Staff[] GetStaff() // be nice, do not write in this pliz
+    public Staff[] GetStaff() // be nice, do not write in this array pliz
     {
         return m_staff;
+    }
+
+    public int GetStaffCount()
+    {
+        int count = 0;
+        for (int i = 0; i < m_staff.Length; ++i)
+        {
+            if (m_staff[i] != null)
+                ++count;
+        }
+        return count;
     }
 
     public string GetName()
@@ -158,15 +167,17 @@ public class Room : CompanyObject
                 assignableStaff.Add(staff);
         }
 
+        // GENERATE BUTTONS
         ScrollRect assignable = _parent.Find("_left/_assignable").GetComponent<ScrollRect>();
         Text assignableText = _parent.Find("_left/_assignableText").GetComponent<Text>();
         ScrollRect assigned = _parent.Find("_right/_assigned").GetComponent<ScrollRect>();
         Text assignedText = _parent.Find("_right/_assignedText").GetComponent<Text>();
 
+        // ASSIGNABLE
         UnityTools.DestroyAllChildren(assignable.content);
         foreach (Staff staff in assignableStaff)
         {
-            Button button = Object.Instantiate(UIManager.Instance().staffButtonPrefab);
+            Button button = Object.Instantiate(UIManager.Instance().listButtonPrefab);
             Text buttonText = button.GetComponentInChildren<Text>();
 
             buttonText.text = staff.GetName();
@@ -190,6 +201,7 @@ public class Room : CompanyObject
         }
         assignableText.text = "Assignable (" + assignableStaff.Count + ")";
 
+        // ASSIGNED
         UnityTools.DestroyAllChildren(assigned.content);
         int assignedCount = 0;
         for (int i = 0; i < m_staff.Length; ++i)
@@ -199,7 +211,7 @@ public class Room : CompanyObject
 
             ++assignedCount;
 
-            Button button = Object.Instantiate(UIManager.Instance().staffButtonPrefab);
+            Button button = Object.Instantiate(UIManager.Instance().listButtonPrefab);
             Text buttonText = button.GetComponentInChildren<Text>();
 
             buttonText.text = m_staff[i].GetName();

@@ -14,7 +14,7 @@ public class Staff : CompanyObject
         m_company = Company.Instance();
     }
 
-    // Do not call this method directly, this should only be called by the room
+    // Do not call this method directly, this should only be called by Company
     public void SetAssignment(Room _assignment)
     {
         m_assignment = _assignment;

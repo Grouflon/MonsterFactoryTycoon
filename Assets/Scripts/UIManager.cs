@@ -7,8 +7,10 @@ using System.Collections.Generic;
 public class UIManager : MonoBehaviour
 {
     [Header("Prefabs")]
-    public Button staffButtonPrefab;
+    public RectTransform emptyWindowContentPrefab;
+    public Button listButtonPrefab;
     public Button buttonPrefab;
+    public Text windowTextPrefab;
 
     [Header("Misc")]
     public Text moneyText;
@@ -16,7 +18,9 @@ public class UIManager : MonoBehaviour
 
     [Header("Staff")]
     public ScrollRect staffListScrollRect;
-    public RectTransform staffWindowContentPrefab;
+
+    [Header("Monsters")]
+    public ScrollRect monstersListScrollRect;
 
     [Header("Rooms")]
     public ScrollRect roomListScrollRect;
@@ -26,6 +30,7 @@ public class UIManager : MonoBehaviour
     public UIManager()
     {
         m_staffButtons = new Dictionary<Guid, Button>();
+        m_monstersButtons = new Dictionary<Guid, Button>();
         
     }
 
@@ -35,6 +40,8 @@ public class UIManager : MonoBehaviour
 
         m_company.OnStaffHired += OnStaffHired;
         m_company.OnStaffFired += OnStaffFired;
+
+        m_company.OnMonsterHired += OnMonsterHired;
 
         m_company.OnRoomBuilt += onRoomBuilt;
 	}
@@ -64,7 +71,7 @@ public class UIManager : MonoBehaviour
                     for (int j = 0; j < Enum.GetNames(typeof(RoomType)).Length; ++j)
                     {
                         RoomType roomType = (RoomType)j;
-                        Button roomButton = Instantiate(staffButtonPrefab);
+                        Button roomButton = Instantiate(listButtonPrefab);
                         roomButton.GetComponentInChildren<Text>().text = "Build " + roomType.ToString();
 
                         roomButton.transform.SetParent(content.transform);
@@ -90,7 +97,7 @@ public class UIManager : MonoBehaviour
 
     void OnStaffHired(Staff _staff)
     {
-        Button button = Instantiate(staffButtonPrefab);
+        Button button = Instantiate(listButtonPrefab);
         Text buttonText = button.GetComponentInChildren<Text>();
         buttonText.text = _staff.GetName();
 
@@ -99,13 +106,15 @@ public class UIManager : MonoBehaviour
             UIWindow window = null;
             if (UIWindowManager.Instance().CreateWindow(_staff.GetName(), out window))
             {
-                RectTransform content = Instantiate(staffWindowContentPrefab);
+                RectTransform content = Instantiate(emptyWindowContentPrefab);
                 window.SetContent(content);
 
-                Button fireButton = content.Find("_fireButton").GetComponent<Button>();
+                Button fireButton = Instantiate(buttonPrefab);
+                fireButton.GetComponentInChildren<Text>().text = "Fire";
                 fireButton.onClick.AddListener(() => {
                     m_company.FireStaff(_staff);
                 });
+                fireButton.transform.SetParent(content);
             }
         });
 
@@ -123,6 +132,30 @@ public class UIManager : MonoBehaviour
             Destroy(button.gameObject);
             m_staffButtons.Remove(_staff.GetID());
         }
+    }
+
+    void OnMonsterHired(Monster _monster)
+    {
+        Button button = Instantiate(listButtonPrefab);
+        Text buttonText = button.GetComponentInChildren<Text>();
+        buttonText.text = _monster.GetName();
+
+        button.onClick.AddListener(() =>
+        {
+            UIWindow window = null;
+            if (UIWindowManager.Instance().CreateWindow(_monster.GetName(), out window))
+            {
+                RectTransform content = Instantiate(emptyWindowContentPrefab);
+                window.SetContent(content);
+
+                Text text = Instantiate(windowTextPrefab);
+                text.text = "Strength : " + _monster.GetStrength();
+                text.transform.SetParent(content);
+            }
+        });
+
+        (button.transform as RectTransform).SetParent(monstersListScrollRect.content);
+        m_monstersButtons.Add(_monster.GetID(), button);
     }
 
     void onRoomBuilt(Room _room)
@@ -151,7 +184,8 @@ public class UIManager : MonoBehaviour
         return instance;
     }
 
-    private Dictionary<Guid,Button> m_staffButtons;
+    private Dictionary<Guid, Button> m_staffButtons;
+    private Dictionary<Guid, Button> m_monstersButtons;
     private Button[] m_roomButtons;
 
     private Company m_company;

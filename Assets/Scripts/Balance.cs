@@ -13,9 +13,17 @@ public class Balance : MonoBehaviour
     public int denCost = 1000;
     public int portalCost = 1000;
 
-    [Header("Rooms")]
+    [Header("Room/Den")]
     public int maxDenStaff = 3;
+
+    [Header("Room/Portal")]
     public int maxPortalStaff = 3;
+    public float baseMonsterGenerationTime = 0.6f;
+    public float staffTimeDiscount = 0.1f;
+
+    [Header("Monsters")]
+    public int minStrength = 1;
+    public int maxStrength = 15;
 
     public static Balance Instance()
     {
