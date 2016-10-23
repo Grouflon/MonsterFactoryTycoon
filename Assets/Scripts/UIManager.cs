@@ -29,7 +29,7 @@ public class UIManager : MonoBehaviour
     [Header("Missions")]
     public Button startMissionButton;
     public RectTransform missonPreparationWindowContentPrefab;
-
+    public RectTransform missionProgressWindowContentPrefab;
 
     public UIManager()
     {
@@ -48,7 +48,10 @@ public class UIManager : MonoBehaviour
         m_company.OnMonsterHired += OnMonsterHired;
 
         m_company.OnRoomBuilt += onRoomBuilt;
-	}
+
+        m_company.OnMissionStarted += OnMissionStarted;
+        m_company.OnMissionEnded += OnMissionEnded;
+    }
 
     void Start()
     {
@@ -65,30 +68,7 @@ public class UIManager : MonoBehaviour
             int roomIndex = i;
             button.onClick.AddListener(() =>
             {
-                UIWindow window = null;
-                if (UIWindowManager.Instance().CreateWindow("Room " + roomIndex, out window))
-                {
-                    GameObject content = new GameObject();
-                    content.name = "Empty Room Window Content";
-                    content.AddComponent<VerticalLayoutGroup>();
-
-                    for (int j = 0; j < Enum.GetNames(typeof(RoomType)).Length; ++j)
-                    {
-                        RoomType roomType = (RoomType)j;
-                        Button roomButton = Instantiate(listButtonPrefab);
-                        roomButton.GetComponentInChildren<Text>().text = "Build " + roomType.ToString();
-
-                        roomButton.transform.SetParent(content.transform);
-
-                        roomButton.onClick.AddListener(() =>
-                        {
-                            m_company.BuildRoom(roomType, roomIndex);
-                            UIWindowManager.Instance().DestroyWindow(window);
-                        });
-                    }
-
-                    window.SetContent(content.transform as RectTransform);
-                }
+                OpenRoomWindow(roomIndex);
             });
         }
 
@@ -165,7 +145,7 @@ public class UIManager : MonoBehaviour
                 window.SetContent(content);
 
                 Text text = Instantiate(windowTextPrefab);
-                text.text = "Strength : " + _monster.GetStrength();
+                text.text = "Strength : " + _monster.GetCurrentStrength() + "/" + _monster.GetMaxStrength();
                 text.transform.SetParent(content);
             }
         });
@@ -178,7 +158,7 @@ public class UIManager : MonoBehaviour
     {
         Button button = m_roomButtons[_room.GetPosition()];
         button.GetComponentInChildren<Text>().text = _room.GetName();
-        button.onClick.RemoveAllListeners();
+        /*button.onClick.RemoveAllListeners();
 
         button.onClick.AddListener(() =>
         {
@@ -187,7 +167,73 @@ public class UIManager : MonoBehaviour
             {
                 _room.FillWindowContent(window);
             }
-        });
+        });*/
+    }
+
+    void OnMissionStarted(MissionInstance _mission)
+    {
+        UIWindow window;
+        if (UIWindowManager.Instance().CreateWindow("Mission Progress", out window))
+        {
+            RectTransform content = Instantiate(UIManager.Instance().missionProgressWindowContentPrefab);
+            window.SetContent(content);
+            MissionProgress missionProgress = content.GetComponent<MissionProgress>();
+
+            window.OnWindowClosed += (UIWindow w) =>
+            {
+                m_company.EndCurrentMission();
+            };
+
+            missionProgress.SetMissionInstance(_mission);
+        }
+    }
+
+    void OnMissionEnded(MissionInstance _mission)
+    {
+        UIWindowManager.Instance().DestroyWindow("Mission Progress");
+    }
+
+    public void OpenRoomWindow(int _index)
+    {
+        Room room = m_company.GetRooms()[_index];
+
+        if (room != null)
+        {
+            UIWindow window = null;
+            if (UIWindowManager.Instance().CreateWindow(room.GetName(), out window))
+            {
+                room.FillWindowContent(window);
+            }
+        }
+        else
+        {
+            UIWindow window = null;
+            if (UIWindowManager.Instance().CreateWindow("Room " + _index, out window))
+            {
+                GameObject content = new GameObject();
+                content.name = "Empty Room Window Content";
+                content.AddComponent<VerticalLayoutGroup>();
+
+                for (int j = 0; j < Enum.GetNames(typeof(RoomType)).Length; ++j)
+                {
+                    RoomType roomType = (RoomType)j;
+                    Button roomButton = Instantiate(listButtonPrefab);
+                    roomButton.GetComponentInChildren<Text>().text = "Build " + roomType.ToString();
+
+                    roomButton.transform.SetParent(content.transform);
+
+                    roomButton.onClick.AddListener(() =>
+                    {
+                        m_company.BuildRoom(roomType, _index);
+                        UIWindowManager.Instance().DestroyWindow(window);
+
+                        OpenRoomWindow(_index);
+                    });
+                }
+
+                window.SetContent(content.transform as RectTransform);
+            }
+        }
     }
 
     public static UIManager Instance()

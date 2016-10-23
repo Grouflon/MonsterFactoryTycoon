@@ -32,26 +32,27 @@ public class UIWindowManager : MonoBehaviour
         return created;
     }
 
-    public void DestroyWindow(UIWindow _window)
+    public bool DestroyWindow(UIWindow _window)
     {
         if (_window == null)
-            return;
+            return false;
 
         if (!m_windows.Remove(_window.GetTitle()))
-        {
-            Debug.LogError("Failed to remove window \"" + _window.GetTitle() + "\".");
-        }
+            return false;
 
         Destroy(_window.gameObject);
+        return true;
     }
 
-    public void DestroyWindow(string _key)
+    public bool DestroyWindow(string _key)
     {
         UIWindow window;
         if (m_windows.TryGetValue(_key, out window))
         {
             DestroyWindow(window);
+            return true;
         }
+        return false;
     }
 
     public static UIWindowManager Instance()

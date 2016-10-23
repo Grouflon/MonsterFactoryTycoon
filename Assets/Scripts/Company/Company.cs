@@ -19,6 +19,16 @@ public class Company : MonoBehaviour
 
     public delegate void MonsterAction(Monster _monster);
     public event MonsterAction OnMonsterHired;
+    public event MonsterAction OnMonsterHealed;
+
+    public delegate void MissionInstanceAction(MissionInstance _mission);
+    public event MissionInstanceAction OnMissionStarted;
+    public event MissionInstanceAction OnMissionEnded;
+
+    public void SetPause(bool _value)
+    {
+        m_pause = _value;
+    }
 
     public void AddMoney(int _value)
     {
@@ -128,7 +138,7 @@ public class Company : MonoBehaviour
     public void HireMonster()
     {
         Monster monster = new Monster();
-        monster.SetStrength(Random.Range(m_balance.minStrength, m_balance.maxStrength));
+        monster.SetMaxStrength(Random.Range(m_balance.minStrength, m_balance.maxStrength));
 
         m_objects.Add(monster);
         m_monsters.Add(monster);
@@ -137,6 +147,60 @@ public class Company : MonoBehaviour
             OnMonsterHired(monster);
 
         Logger.Log("Hired new monster \"" + monster.GetName() + "\".");
+    }
+
+    public void NotifyMonsterHealed(Monster _monster)
+    {
+        if (_monster.GetCurrentStrength() == _monster.GetMaxStrength())
+            Logger.Log("Monster \"" + _monster.GetName() + "\" has recovered from its injuries.");
+
+        if (OnMonsterHealed != null)
+            OnMonsterHealed(_monster);
+    }
+
+    public void StartMission(Mission _mission, List<Monster> _monsters)
+    {
+        if (m_currentMission != null)
+        {
+            Debug.LogError("Can't start two missions at the same time.");
+            return;
+        }
+
+        m_currentMission = new MissionInstance();
+        m_currentMission.Start(_mission, _monsters);
+
+        if (OnMissionStarted != null)
+            OnMissionStarted(m_currentMission);
+
+        SetPause(true);
+
+        Logger.Log("Started mission.");
+    }
+
+    public void EndCurrentMission()
+    {
+        if (m_currentMission == null)
+        {
+            Debug.LogError("Can't end mission, there is no mission.");
+            return;
+        }
+
+        if (m_currentMission.GetStatus() == MissionInstance.Status.Success)
+        {
+            AddMoney(m_currentMission.GetMission().reward);
+            Logger.Log("Succesfully completed mission: gained " + m_currentMission.GetMission().reward + "$.");
+        }
+        else
+        {
+            Logger.Log("Mission Failed");
+        }
+
+        if (OnMissionEnded != null)
+            OnMissionEnded(m_currentMission);
+
+        SetPause(false);
+
+        m_currentMission = null;
     }
 
     public IList<Staff> GetStaff()
@@ -195,7 +259,14 @@ public class Company : MonoBehaviour
 	
 	void Update()
 	{
+        if (m_currentMission != null && (m_currentMission.GetStatus() == MissionInstance.Status.Failure || m_currentMission.GetStatus() == MissionInstance.Status.Success))
+            EndCurrentMission();
+
         float deltaTime = Time.deltaTime * timeRatio;
+
+        if (m_pause)
+            deltaTime = 0.0f;
+
         float cycleDeltaTime = deltaTime / m_balance.cycleDuration;
 
         m_time += cycleDeltaTime;
@@ -228,6 +299,9 @@ public class Company : MonoBehaviour
     List<Monster> m_monsters;
     Room[] m_rooms;
 
+    MissionInstance m_currentMission;
+
     float m_timer = 0.0f;
     float m_time = 0.0f;
+    bool m_pause = false;
 }

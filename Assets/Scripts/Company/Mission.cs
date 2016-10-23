@@ -3,7 +3,8 @@ using System.Collections;
 
 public class Obstacle
 {
-    public float strength;
+    public string name;
+    public int strength;
 }
 
 public class Mission
@@ -16,6 +17,8 @@ public class Mission
         {
             obstacles[i] = new Obstacle();
             obstacles[i].strength = 10;
+
+            obstacles[i].name = "Obstacle " + (i + 1);
         }
 
         reward = 1000;

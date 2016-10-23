@@ -24,6 +24,7 @@ public class Balance : MonoBehaviour
     [Header("Monsters")]
     public int minStrength = 1;
     public int maxStrength = 15;
+    public float monsterRecoverTime = 0.1f;
 
     public static Balance Instance()
     {

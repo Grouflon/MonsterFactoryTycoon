@@ -21,6 +21,13 @@ public class MissionPreparation : MonoBehaviour
     public void SetMission(Mission _value)
     {
         m_mission = _value;
+        m_assignedMonsters.Clear();
+        ResetMissionDesc();
+    }
+
+    public Mission GetMission()
+    {
+        return m_mission;
     }
 
     void Start ()
@@ -39,6 +46,13 @@ public class MissionPreparation : MonoBehaviour
         ResetMissionDesc();
 
         m_company.OnMonsterHired += OnMonsterHired;
+        m_company.OnMonsterHealed += OnMonsterHealed;
+    }
+
+    void OnDestroy()
+    {
+        m_company.OnMonsterHired -= OnMonsterHired;
+        m_company.OnMonsterHealed -= OnMonsterHealed;
     }
 
     void OnMonsterHired(Monster _monster)
@@ -47,9 +61,12 @@ public class MissionPreparation : MonoBehaviour
         ResetMissionDesc();
     }
 
-    void OnDestroy()
+    void OnMonsterHealed(Monster _monster)
     {
-        m_company.OnMonsterHired -= OnMonsterHired;
+        if (m_assignableMonsters.Find(delegate (Monster m) { return _monster == m; }) == null)
+            return;
+
+        ResetMissionDesc();
     }
 	
 	void Update()
@@ -66,7 +83,7 @@ public class MissionPreparation : MonoBehaviour
         foreach (Monster monster in m_assignableMonsters)
         {
             Button button = Instantiate(m_UI.listButtonPrefab);
-            button.GetComponentInChildren<Text>().text = monster.GetName() + " (" + monster.GetStrength() + ")";
+            button.GetComponentInChildren<Text>().text = monster.GetName() + " (" + monster.GetCurrentStrength() + "/" + monster.GetMaxStrength() + ")";
             button.transform.SetParent(assignableList.content);
             button.interactable = m_assignedMonsters.Count < m_mission.maxMonstersCount;
 
@@ -77,13 +94,19 @@ public class MissionPreparation : MonoBehaviour
                 m_assignedMonsters.Add(m);
                 ResetMissionDesc();
             });
+
+            if (monster.GetCurrentStrength() != monster.GetMaxStrength())
+            {
+                // TODO plug an event on heal
+                button.interactable = false;
+            }
         }
 
         assignedText.text = "Assigned monsters (" + m_assignedMonsters.Count + "/" + m_mission.maxMonstersCount + ")";
         foreach (Monster monster in m_assignedMonsters)
         {
             Button button = Instantiate(m_UI.listButtonPrefab);
-            button.GetComponentInChildren<Text>().text = monster.GetName() + " (" + monster.GetStrength() + ")";
+            button.GetComponentInChildren<Text>().text = monster.GetName() + " (" + monster.GetCurrentStrength() + "/" + monster.GetMaxStrength() + ")";
             button.transform.SetParent(assignedList.content);
 
             Monster m = monster;
@@ -96,6 +119,12 @@ public class MissionPreparation : MonoBehaviour
         }
 
         startMissionButton.interactable = m_assignedMonsters.Count != 0;
+        startMissionButton.onClick.RemoveAllListeners();
+        startMissionButton.onClick.AddListener(() =>
+        {
+            m_company.StartMission(m_mission, m_assignedMonsters);
+            UIWindowManager.Instance().DestroyWindow(transform.GetComponentInParent<UIWindow>());
+        });
 
         missionText.text = "";
         missionText.text += "Obstacles count: " + m_mission.obstacles.Length + "\n";
