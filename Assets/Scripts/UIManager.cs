@@ -26,6 +26,10 @@ public class UIManager : MonoBehaviour
     public ScrollRect roomListScrollRect;
     public RectTransform roomWindowContentPrefab;
 
+    [Header("Missions")]
+    public Button startMissionButton;
+    public RectTransform missonPreparationWindowContentPrefab;
+
 
     public UIManager()
     {
@@ -87,6 +91,18 @@ public class UIManager : MonoBehaviour
                 }
             });
         }
+
+        startMissionButton.onClick.AddListener(() =>
+        {
+            UIWindow window;
+            if (UIWindowManager.Instance().CreateWindow("Start Mission", out window))
+            {
+                RectTransform missionPreprationContent = Instantiate(missonPreparationWindowContentPrefab);
+                window.SetContent(missionPreprationContent);
+
+                missionPreprationContent.GetComponent<MissionPreparation>().SetMission(new Mission());
+            }
+        });
     }
 	
 	void Update()

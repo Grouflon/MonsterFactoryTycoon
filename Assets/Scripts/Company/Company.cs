@@ -144,6 +144,11 @@ public class Company : MonoBehaviour
         return m_staff.AsReadOnly();
     }
 
+    public IList<Monster> GetMonsters()
+    {
+        return m_monsters.AsReadOnly();
+    }
+
     public Room[] GetRooms()
     {
         return m_rooms;
@@ -225,5 +230,4 @@ public class Company : MonoBehaviour
 
     float m_timer = 0.0f;
     float m_time = 0.0f;
-    int m_cycleCount = 0;
 }
